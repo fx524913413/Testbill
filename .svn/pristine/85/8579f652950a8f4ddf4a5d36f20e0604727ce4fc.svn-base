@@ -1,0 +1,157 @@
+package com.ruijie.spl.billingEngine.booking.entity;
+
+import java.util.Set;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "User_info")
+public class User_info {
+	@Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+	private int id;
+	
+	
+    private String UserKey;
+
+	@Column(name = "MainAccountKey")
+    private String MainAccountKey;
+
+	@OneToOne(cascade = {CascadeType.PERSIST })
+	@JoinColumn(name="Main_Account")				//注释本表中指向另一个表的外键
+	private MainAccount_info MainAccount;
+	
+	@Column(name = "AccountDesc")
+    private String AccountDesc;
+
+	@Column(name = "CreateManagerID")
+    private String CreateManagerID;
+
+	@Column(name = "CreateTime")
+    private String CreateTime;
+
+	@Column(name = "LastUpDateTime")
+    private String LastUpDateTime;
+
+	@Column(name = "CreateHost")
+    private String CreateHost;
+
+	@Column(name = "LastUpDateHost")
+    private String LastUpDateHost;
+
+	@Column(name = "IsFundCreateuserFee")
+    private String IsFundCreateuserFee;
+	//开户费
+
+	@Column(name = "UnpaidAmount")
+    private String UnpaidAmount;
+	//未付费数量 企业版专有
+
+	
+	public String getUserKey() {
+		return UserKey;
+	}
+
+	public void setUserKey(String userKey) {
+		UserKey = userKey;
+	}
+
+	public String getMainAccountKey() {
+		return MainAccountKey;
+	}
+
+	public void setMainAccountKey(String mainAccountKey) {
+		MainAccountKey = mainAccountKey;
+	}
+
+	public String getAccountDesc() {
+		return AccountDesc;
+	}
+
+	public void setAccountDesc(String accountDesc) {
+		AccountDesc = accountDesc;
+	}
+
+	public String getCreateManagerID() {
+		return CreateManagerID;
+	}
+
+	public void setCreateManagerID(String createManagerID) {
+		CreateManagerID = createManagerID;
+	}
+
+	public String getCreateTime() {
+		return CreateTime;
+	}
+
+	public void setCreateTime(String createTime) {
+		CreateTime = createTime;
+	}
+
+	public String getLastUpDateTime() {
+		return LastUpDateTime;
+	}
+
+	public void setLastUpDateTime(String lastUpDateTime) {
+		LastUpDateTime = lastUpDateTime;
+	}
+
+	public String getCreateHost() {
+		return CreateHost;
+	}
+
+	public void setCreateHost(String createHost) {
+		CreateHost = createHost;
+	}
+
+	public String getLastUpDateHost() {
+		return LastUpDateHost;
+	}
+
+	public void setLastUpDateHost(String lastUpDateHost) {
+		LastUpDateHost = lastUpDateHost;
+	}
+
+	public String getIsFundCreateuserFee() {
+		return IsFundCreateuserFee;
+	}
+
+	public void setIsFundCreateuserFee(String isFundCreateuserFee) {
+		IsFundCreateuserFee = isFundCreateuserFee;
+	}
+
+	public String getUnpaidAmount() {
+		return UnpaidAmount;
+	}
+
+	public void setUnpaidAmount(String unpaidAmount) {
+		UnpaidAmount = unpaidAmount;
+	}
+
+	public MainAccount_info getMainAccount() {
+		return MainAccount;
+	}
+
+	public void setMainAccount(MainAccount_info mainAccount) {
+		MainAccount = mainAccount;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+    
+	
+}

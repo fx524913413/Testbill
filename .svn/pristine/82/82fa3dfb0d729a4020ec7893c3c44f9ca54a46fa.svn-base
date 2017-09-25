@@ -1,0 +1,130 @@
+package com.ruijie.spl.billingEngine.billing;
+
+import com.ruijie.spl.billingEngine.BillingEngineApplication;
+import com.ruijie.spl.billingEngine.billing.beans.BillingFeeList;
+import com.ruijie.spl.billingEngine.billing.beans.BillingTemp;
+import com.ruijie.spl.billingEngine.billing.entity.BusinessVolumeEntity;
+import com.ruijie.spl.billingEngine.billing.entity.PersonEntity;
+import com.ruijie.spl.billingEngine.preprocess.entity.PreprocessOutParameters;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.kie.api.KieServices;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by Administrator on 2017/9/6.
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = BillingEngineApplication.class)
+public class RulesTest {
+    @Autowired
+    private BillingTemp billingTemp;
+    @Autowired
+    private BillingFeeList billingFeeList;
+
+    private KieSession session;
+
+    @Before
+    public void beforeSet() {
+        KieServices services = KieServices.Factory.get();
+        KieContainer kc = services.getKieClasspathContainer();
+        session = kc.newKieSession("ARuleKsession");
+    }
+
+    /*测试1000rule的逻辑是否正确*/
+    @Test
+    public void rule1000Test1() {
+        BusinessVolumeEntity businessVolumeEntity = new BusinessVolumeEntity();
+        businessVolumeEntity.setInlandDownFlow(BigDecimal.valueOf(10));
+
+        PersonEntity entity = new PersonEntity();
+//        entity.setBusinessVolumeRelation(businessVolumeEntity);
+
+        session.setGlobal("billingFeeList", billingFeeList);
+
+        billingTemp.setInlandDownFlow(BigDecimal.valueOf(5));
+        session.insert(billingTemp);
+//        session.insert(entity.getBusinessVolumeRelation());
+        session.fireAllRules();
+        session.dispose();
+
+        BigDecimal count = billingFeeList.getBillingFeeList().get(billingFeeList.getBillingFeeList().size() - 1).getCount();
+        Assert.assertEquals(BigDecimal.valueOf(10.0), count);
+    }
+
+    /*测试1000rule的逻辑是否正确*/
+    @Test
+    public void rule1000Test2() {
+        BusinessVolumeEntity businessVolumeEntity = new BusinessVolumeEntity();
+        businessVolumeEntity.setInlandDownFlow(BigDecimal.valueOf(25));
+
+        PersonEntity entity = new PersonEntity();
+//        entity.setBusinessVolumeRelation(businessVolumeEntity);
+
+        session.setGlobal("billingFeeList", billingFeeList);
+
+        billingTemp.setInlandDownFlow(BigDecimal.valueOf(5));
+        session.insert(billingTemp);
+//        session.insert(entity.getBusinessVolumeRelation());
+        session.fireAllRules();
+        session.dispose();
+
+        BigDecimal count = billingFeeList.getBillingFeeList().get(billingFeeList.getBillingFeeList().size() - 1).getCount();
+        Assert.assertEquals(BigDecimal.valueOf(5), count);
+    }
+
+    /*测试1000rule的逻辑是否正确*/
+    @Test
+    public void rule1000Test3() {
+        BusinessVolumeEntity businessVolumeEntity = new BusinessVolumeEntity();
+        businessVolumeEntity.setInlandDownFlow(BigDecimal.valueOf(10));
+
+        PersonEntity entity = new PersonEntity();
+//        entity.setBusinessVolumeRelation(businessVolumeEntity);
+
+        session.setGlobal("billingFeeList", billingFeeList);
+
+        billingTemp.setInlandDownFlow(BigDecimal.valueOf(15));
+        session.insert(billingTemp);
+//        session.insert(entity.getBusinessVolumeRelation());
+        session.fireAllRules();
+        session.dispose();
+
+        BigDecimal count = billingFeeList.getBillingFeeList().get(billingFeeList.getBillingFeeList().size() - 1).getCount();
+        Assert.assertEquals(BigDecimal.valueOf(25), count);
+    }
+
+    /*测试0000rule的逻辑是否正确*/
+    @Test
+    public void rule0000Test() throws ClassNotFoundException {
+        LocalDateTime time = LocalDateTime.now();
+
+        PersonEntity personEntity = new PersonEntity();
+        personEntity.setNextBillingTime(time);
+
+        PreprocessOutParameters outParameters = new PreprocessOutParameters();
+        Map<String, Object> ddd = new HashMap<>();
+        ddd.put("currentSystemTime", time.plusMinutes(10));
+        outParameters.setPreprocessOutParameters(ddd);
+//        outParameters.setCurrentSystemTime(time.plusMinutes(10));
+
+//        Object systemTime = outParameters.getObject("currentSystemTime", Class.forName("java.time.LocalDateTime"));
+//        boolean b = systemTime instanceof LocalDateTime;
+        session.insert(personEntity);
+        session.insert(outParameters);
+        int i = session.fireAllRules();
+        session.dispose();
+        System.out.println("+++++++++++++++++++++++++++++++++++" + i);
+    }
+}

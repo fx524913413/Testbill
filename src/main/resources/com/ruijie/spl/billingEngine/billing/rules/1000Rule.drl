@@ -1,0 +1,39 @@
+package com.ruijie.spl.billingEngine.billing.tariffStrategies;
+dialect  "mvel"
+
+//import com.ruijie.spl.billingEngine.billing.beans.*;
+//import com.ruijie.spl.billingEngine.billing.entity.*
+//import java.math.BigDecimal;
+//import com.ruijie.spl.billingEngine.billing.dataEnum.FeeTypeEnum;
+//import com.ruijie.spl.billingEngine.billing.dataEnum.*;
+//import com.ruijie.spl.billingEngine.common.helper.*;
+//import com.ruijie.spl.billingEngine.preprocess.entity.*;
+//
+//global BillingFeeList billingFeeList;
+//
+//rule "0~20M inlandDown flow usage"
+//    when
+//        PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.inlandDownFlow] (>=0 && <20))
+//        BusinessVolumeEntity_Ab($flowCumut:inlandDownFlow (>=0 && <20))
+//        $billing:BillingTemp($flow:inlandDownFlow,$flow+$flowCumut<=20)
+//    then
+//        billingFeeList.addBillingFee(new BillingFee($flow.multiply(BigDecimal.valueOf(2)),FeeTypeEnum.Consume_InlandDown_Flow));
+//end
+//
+//rule "bigger than 20M inlandDown flow usage"
+//    when
+//        BusinessVolumeEntity_Ab(inlandDownFlow>20)
+//        BillingTemp($flow:inlandDownFlow>0)
+//    then
+//        billingFeeList.addBillingFee(new BillingFee($flow.multiply(BigDecimal.valueOf(1)),FeeTypeEnum.Consume_InlandDown_Flow));
+//end
+//
+//rule "cross 0~20M、>20M, inlandDown usage"
+//    when
+//        BusinessVolumeEntity_Ab($flowCumut:inlandDownFlow(>=0&&<20))
+//        $billing:BillingTemp($flow:inlandDownFlow,$flow+$flowCumut>20)
+//    then
+//        BigDecimal lowerFlow=BigDecimal.valueOf(20).subtract($flowCumut);
+//        BigDecimal upperFlow=$flow.add($flowCumut).subtract(BigDecimal.valueOf(20));
+//        billingFeeList.addBillingFee(new BillingFee(lowerFlow.multiply(BigDecimal.valueOf(2)).add(upperFlow.multiply(BigDecimal.valueOf(1))),FeeTypeEnum.Consume_InlandDown_Flow));
+// end

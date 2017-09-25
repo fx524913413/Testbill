@@ -1,0 +1,9 @@
+package com.ruijie.spl.billingEngine.booking.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.ruijie.spl.billingEngine.booking.entity.MainAccount_info;
+
+public interface MainAccountRepository extends JpaRepository<MainAccount_info,Integer> {
+	MainAccount_info findById(int id);
+}

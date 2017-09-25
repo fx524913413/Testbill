@@ -1,0 +1,61 @@
+package com.ruijie.spl.billingEngine.billing.rules;
+dialect "mvel";
+
+import com.ruijie.spl.billingEngine.billing.beans.*;
+import com.ruijie.spl.billingEngine.billing.entity.*
+import java.math.BigDecimal;
+import com.ruijie.spl.billingEngine.billing.dataEnum.FeeTypeEnum;
+import com.ruijie.spl.billingEngine.billing.dataEnum.*;
+import com.ruijie.spl.billingEngine.common.helper.*;
+import com.ruijie.spl.billingEngine.preprocess.entity.*;
+
+/*一个周期资费策略，20元/月，赠送100M国内下行流量，100M国内上行流量；流量使用规则：1元/M国内上行流量，0.5元/M国内下行流量*/
+global BillingFeeList billingFeeList;
+
+rule "周期续费,20元30天"
+    when
+        exists(PersonEntity())
+        PersonEntity($perriodAccounts:periodAccounts,$tariffStrategies:tariffStrategies)
+        TariffStrategyEntity($tariffName:tariffStrategyName) from $tariffStrategies
+        /*exists(*/$periodAccount:PeriodAccountInfoEntity($periodTariffName:tariffStrategyName==$tariffName) from $perriodAccounts/*)*/
+        PreprocessOutParameters(preprocessOutParameters[PreprocessOutString.currentSystemTime]>$periodAccount.nextBillingTime)
+    then
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(20),FeeTypeEnum.Period_Fee,$tariffName));
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(100),FeeTypeEnum.Period_InlandDown_GiftFlow,$tariffName));
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(100),FeeTypeEnum.Period_InlandUp_GiftFlow,$tariffName));
+end
+
+rule "周期开通"
+    when
+        /*exists(*/TariffStrategyEntity($tariff:tariffStrategyId,$tariffName:tariffStrategyName)/*)*/
+        PersonEntity($tariffStrategies:tariffStrategies)
+        not(TariffStrategyEntity(tariffStrategyId==$tariff) from $tariffStrategies)
+    then
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(20),FeeTypeEnum.Period_Fee,BigDecimal.valueOf(30),FeeObjectUnitEnum.Day,$tariffName,BillingFeeOperationTypeEnum.Add));
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(100),FeeTypeEnum.Period_InlandDown_GiftFlow,BigDecimal.valueOf(30),FeeObjectUnitEnum.Day,$tariffName,BillingFeeOperationTypeEnum.Add));
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(100),FeeTypeEnum.Consume_InlandUp_Flow,BigDecimal.valueOf(30),FeeObjectUnitEnum.Day,$tariffName,BillingFeeOperationTypeEnum.Add));
+end
+
+rule "国内上行流量使用，1元/M"
+    when
+        exists(PersonEntity())
+        PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.inlandUpFlow]>0)
+
+        $p:PersonEntity($perriodAccounts:periodAccounts,$tariffStrategies:tariffStrategies)
+        TariffStrategyEntity($tariffName:tariffStrategyName) from $tariffStrategies
+        exists($periodAccount:PeriodAccountInfoEntity($periodTariffName:tariffStrategyName==$tariffName) from $perriodAccounts)
+    then
+        billingFeeList.addBillingFee(new BillingFee(((BigDecimal) $flow).multiply(BigDecimal.valueOf(1)),FeeTypeEnum.Consume_InlandDown_Flow,(BigDecimal) $flow,FeeObjectUnitEnum.M,$tariffName));
+end
+
+rule "国内下行流量使用，0.5元/M"
+    when
+        exists(PersonEntity())
+        PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.inlandDownFlow]>0)
+
+        PersonEntity($perriodAccounts:periodAccounts,$tariffStrategies:tariffStrategies)
+        TariffStrategyEntity($tariffName:tariffStrategyName) from $tariffStrategies
+        exists(PeriodAccountInfoEntity($periodTariffName:tariffStrategyName==$tariffName) from $perriodAccounts)
+    then
+         billingFeeList.addBillingFee(new BillingFee(((BigDecimal) $flow).multiply(BigDecimal.valueOf(0.5)),FeeTypeEnum.Consume_InlandDown_Flow,(BigDecimal) $flow,FeeObjectUnitEnum.M,$tariffName));
+end

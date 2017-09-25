@@ -1,0 +1,18 @@
+package com.ruijie.spl.billingEngine.billing.tariffStrategies;
+dialect  "mvel"
+
+import com.ruijie.spl.billingEngine.billing.entity.*
+import java.math.BigDecimal
+import com.ruijie.spl.billingEngine.billing.dataEnum.FeeTypeEnum
+import com.ruijie.spl.billingEngine.billing.beans.*;
+import com.ruijie.spl.billingEngine.preprocess.entity.*;
+import java.time.*;
+import com.ruijie.spl.billingEngine.common.helper.*;
+
+rule "period fee usage"
+    when
+        PreprocessOutParameters($time:preprocessOutParameters.get("currentSystemTime"))
+        PersonEntity(nextBillingTime<$time)
+    then
+        System.out.println("haha");
+end

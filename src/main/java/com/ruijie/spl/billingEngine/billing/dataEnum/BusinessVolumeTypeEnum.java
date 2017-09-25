@@ -1,0 +1,25 @@
+package com.ruijie.spl.billingEngine.billing.dataEnum;
+
+import org.springframework.context.annotation.Bean;
+
+/**
+ * Created by Administrator on 2017/9/5.
+ */
+public enum BusinessVolumeTypeEnum {
+    /**
+     * 流量费用类型
+     */
+    Flow,
+    /**
+     * 时长流量类型
+     */
+    SessionTime,
+    /**
+     * 金额费用类型
+     */
+    Money,
+    /**
+     * 周期费用类型
+     */
+    PeriodTime
+}

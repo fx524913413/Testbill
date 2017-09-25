@@ -1,0 +1,112 @@
+package com.ruijie.spl.billingEngine.billing.rules;
+dialect "mvel";
+
+import com.ruijie.spl.billingEngine.billing.beans.*;
+import com.ruijie.spl.billingEngine.billing.entity.*
+import java.math.BigDecimal;
+import com.ruijie.spl.billingEngine.billing.dataEnum.*;
+import com.ruijie.spl.billingEngine.common.helper.*;
+import com.ruijie.spl.billingEngine.preprocess.entity.*;
+import com.ruijie.spl.billingEngine.billing.entity_NoForeignKey.*
+import com.ruijie.spl.billingEngine.billing.dataEnum.BusinessVolumeTypeEnum;
+import com.ruijie.spl.billingEngine.billing.entityWrapper.*;
+import java.util.List
+import java.time.LocalDateTime;
+
+/*一个周期资费策略，20元/月，赠送100M流量；流量使用规则：0.75元/M*/
+global BillingFeePackage billingFeeList;
+
+rule "周期日续费,20元30天,赠送100M流量"
+    when
+       TariffStrategyEntity($tariffName:tariffStrategyName)
+       $periodAccount:AccountInfoEntity($lable:accountLabel=="Package_PeriodCycle_Acct", $tariffName==tariffStrategyName)
+       PreprocessOutParameters(preprocessOutParameters[PreprocessOutString.currentSystemTime]>$periodAccount.nextBillingTime)
+    then
+       billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(30),$lable,$tariffName,BusinessVolumeTypeEnum.PeriodTime,BillingFeeOperationTypeEnum.Reset,LocalDateTime.now().plusDays(30)));
+       billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(100),"Package_GiftFlow_Acct",$tariffName,BusinessVolumeTypeEnum.Flow, BillingFeeOperationTypeEnum.Reset));
+       billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(20),"Sum_Balance_Acct",null,BusinessVolumeTypeEnum.Money));
+end
+
+rule "开通周期计费策略"
+    when
+        PreprocessOutParameters(preprocessOutParameters[PreprocessOutString.isTariffStrategyOpen]==true)
+        TariffStrategyEntity($tariffName:tariffStrategyName)
+    then
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(30), "Package_PeriodCycle_Acct", $tariffName, BusinessVolumeTypeEnum.PeriodTime, BillingFeeOperationTypeEnum.Add, "", BigDecimal.ZERO, BigDecimal.valueOf(30), "","Package_PeriodCycle_Acct",LocalDateTime.now().plusDays(30)));
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(100), "Package_GiftFlow_Acct", $tariffName, BusinessVolumeTypeEnum.Flow, BillingFeeOperationTypeEnum.Add, "", BigDecimal.ZERO, BigDecimal.valueOf(100), "","Package_GiftFlow_Acct",null));
+end
+
+rule "流量总的使用，记录"
+    when
+        $p:PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.ntdFlow] >0)
+    then
+        billingFeeList.addBillingFee(new BillingFee(((BigDecimal)$flow),null,null,BusinessVolumeTypeEnum.Flow,BillingFeeOperationTypeEnum.Record));
+end
+
+rule "流量总的使用,累积量"
+    when
+        TariffStrategyEntity($tariffName:tariffStrategyName)
+        AccountInfoEntity($lable:accountLabel=="Package_Cumulant_Acct", $tariffName==tariffStrategyName)
+        $p:PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.ntdFlow] >0)
+    then
+        billingFeeList.addBillingFee(new BillingFee(((BigDecimal)$flow),$lable,$tariffName,BusinessVolumeTypeEnum.Flow));
+end
+
+rule "使用赠送的流量, 使用完"
+    salience 100
+    lock-on-active
+    when
+        AccountInfoEntity(accountLabel=="Out_GiftFlow_Acct", $freeFlow :feeObjectAmount>0)
+        $p:PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.ntdFlow] (>0 && >$freeFlow))
+    then
+        billingFeeList.addBillingFee(new BillingFee($freeFlow,"Out_GiftFlow_Acct",null,BusinessVolumeTypeEnum.Flow));
+        BigDecimal inlandUpFlow = (BigDecimal) $p.getPreprocessOutParameters().get(PreprocessOutString.ntdFlow);
+        $p.getPreprocessOutParameters().put(PreprocessOutString.ntdFlow,inlandUpFlow.subtract($freeFlow));
+        update($p);
+end
+
+rule "使用赠送的流量，未使用完"
+    salience 100
+    lock-on-active
+    when
+        AccountInfoEntity(accountLabel=="Out_GiftFlow_Acct", $freeFlow:feeObjectAmount>0)
+        $p:PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.ntdFlow] (>0 && <=$freeFlow))
+    then
+        billingFeeList.addBillingFee(new BillingFee(((BigDecimal)$flow),"Out_GiftFlow_Acct",null,BusinessVolumeTypeEnum.Flow));
+        $p.getPreprocessOutParameters().put(PreprocessOutString.ntdFlow,BigDecimal.ZERO);
+        update($p);
+end
+
+rule "使用套餐赠送流量，未使用完"
+    salience 80
+    lock-on-active
+    when
+        TariffStrategyEntity($tariffName:tariffStrategyName)
+        AccountInfoEntity(tariffStrategyName==$tariffName, accountLabel=="Package_GiftFlow_Acct", $packageFlow:feeObjectAmount>0)
+        $p:PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.ntdFlow] (>0 && <=$packageFlow))
+    then
+        billingFeeList.addBillingFee(new BillingFee(((BigDecimal)$flow),"Package_GiftFlow_Acct",$tariffName,BusinessVolumeTypeEnum.Flow));
+        $p.getPreprocessOutParameters().put(PreprocessOutString.ntdFlow,BigDecimal.ZERO);
+        update($p);
+end
+
+rule "使用套餐赠送流量，使用完"
+    salience 80
+    lock-on-active
+    when
+        TariffStrategyEntity($tariffName:tariffStrategyName)
+        AccountInfoEntity(tariffStrategyName==$tariffName, accountLabel=="Package_GiftFlow_Acct", $packageFlow:feeObjectAmount>0)
+        $p:PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.ntdFlow] (>0 && >$packageFlow))
+    then
+        billingFeeList.addBillingFee(new BillingFee($packageFlow,"Package_GiftFlow_Acct",$tariffName,BusinessVolumeTypeEnum.Flow));
+        BigDecimal inlandUpFlow = (BigDecimal) $p.getPreprocessOutParameters().get(PreprocessOutString.ntdFlow);
+        $p.getPreprocessOutParameters().put(PreprocessOutString.ntdFlow,inlandUpFlow.subtract($packageFlow));
+        update($p);
+end
+
+rule "流量使用，0.75元/M"
+    when
+        PreprocessOutParameters($flow:preprocessOutParameters[PreprocessOutString.ntdFlow]>0)
+    then
+        billingFeeList.addBillingFee(new BillingFee(((BigDecimal)$flow).multiply(BigDecimal.valueOf(0.75)),"Sum_Balance_Acct",null,BusinessVolumeTypeEnum.Money));
+end

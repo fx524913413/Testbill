@@ -1,0 +1,68 @@
+package com.ruijie.spl.billingEngine.booking.service;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+
+import com.ruijie.spl.billingEngine.booking.entity.Acc_Relation;
+import com.ruijie.spl.billingEngine.booking.entity.MainAccount_info;
+import com.ruijie.spl.billingEngine.booking.entity.SubAccount_info;
+import com.ruijie.spl.billingEngine.booking.entity.User_info;
+import com.ruijie.spl.billingEngine.booking.repository.AccRelationRepository;
+import com.ruijie.spl.billingEngine.booking.repository.MainAccountRepository;
+import com.ruijie.spl.billingEngine.booking.repository.SubAccountRepository;
+import com.ruijie.spl.billingEngine.booking.repository.User_InfoRepository;
+
+@Service
+public class User_booking_service {
+	@Autowired
+	private User_InfoRepository repostor;
+	@Autowired
+	private MainAccountRepository marepository;
+	@Autowired
+	private SubAccountRepository subRepository;
+	@Autowired
+	private AccRelationRepository AccRelRepository;
+	
+	@Transactional
+	public void executionSourceFeeItem(Integer userid,String sourcefeeid,Double fee) {
+
+    	User_info info2 = repostor.findOne(userid);//通过用户ID查询用户表
+    	Map<Integer,Object> accpririty = new TreeMap<Integer,Object>();
+    	
+    	MainAccount_info mainAccount_info = info2.getMainAccount();//得到主账户对象
+    	Acc_Relation acc_Relation = AccRelRepository.findByAccountTypeBookAndSourceFeeID(info2.getMainAccount().getAccountType(), sourcefeeid);//得到入账关系表决定的主账户相关属性
+    	Set<SubAccount_info> subtest = info2.getMainAccount().getSubAccountinfo();//得到用户子账户对象
+    	for(SubAccount_info obj4subtest:subtest){
+    		Acc_Relation acc_Relation2 = AccRelRepository.findByAccountTypeBookAndSourceFeeID(obj4subtest.getAccountType(), sourcefeeid);//得到入账关系表决定的子账户相关属性
+    		accpririty.put(acc_Relation2.getPriority(), obj4subtest);//将子账户的优先值和子账户对象插入map对象
+    	}
+    	accpririty.put(acc_Relation.getPriority(), mainAccount_info);//将主账户的优先值和主账户对象插入map对象
+    	Set<Map.Entry<Integer, Object>> entrysetSet = accpririty.entrySet();
+    	double n = fee;//n用于模拟扣费数额
+	
+    	for(Map.Entry<Integer, Object> obj4acc:entrysetSet){
+    		Object object = obj4acc.getValue();
+    		
+    		if(object instanceof SubAccount_info){
+    			SubAccount_info subAccount_info1 = (SubAccount_info)object;
+        		subAccount_info1.setAmount(subAccount_info1.getAmount()-n);
+        		subRepository.save(subAccount_info1);
+    		}
+    		else if(object instanceof MainAccount_info){
+    			MainAccount_info mainAccount_info1 = (MainAccount_info)object;
+    			mainAccount_info1.setAmount(mainAccount_info1.getAmount()-n);
+    			
+    			boolean aa= mainAccount_info==mainAccount_info1;
+    			marepository.saveAndFlush(mainAccount_info1);
+    		}
+    		n++;
+    	}
+		System.out.println("i will be back");
+    }
+}

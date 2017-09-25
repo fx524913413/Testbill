@@ -1,0 +1,91 @@
+package com.ruijie.spl.billingEngine.billing;
+
+import com.ruijie.spl.billingEngine.billing.beans.BillingFeeList;
+import com.ruijie.spl.billingEngine.billing.repository.PersonRepository;
+import com.ruijie.spl.billingEngine.billing.repository.TariffStrategyRepository;
+import com.ruijie.spl.billingEngine.billing.service.TestDatabaseService;
+import com.ruijie.spl.billingEngine.interfacebean.ruleEngine.RuleEngineService;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.kie.api.KieServices;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.FileNotFoundException;
+
+/**
+ * Created by Administrator on 2017/9/6.
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class BillingEngineApplicationTest {
+    @Autowired
+    private TestDatabaseService databaseService;
+    @Autowired
+    private PersonRepository personRepository;
+    @Autowired
+    private TariffStrategyRepository tariffStrategyRepository;
+    @Autowired
+    private RuleEngineService ruleEngineService;
+    @Autowired
+    private BillingFeeList billingFeeList;
+
+    private KieSession session;
+
+    @Before
+    public void beforeSet() {
+        KieServices services = KieServices.Factory.get();
+        KieContainer kc = services.getKieClasspathContainer();
+        session = kc.newKieSession("RealRuleSession");
+    }
+
+    @Test
+    public void databaseServiceTest() throws FileNotFoundException {
+        try {
+            databaseService.createRecords();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void addStrategyTest() throws FileNotFoundException {
+        databaseService.createTariffStrategy();
+    }
+
+    @Test
+    public void addAStrategyForAUserTest() {
+        databaseService.addAPeriodTariffStrategyForAUser("69a30e05-28d2-4068-b992-fee3e3b4b479", (long) 3246);
+    }
+
+    @Test
+    @Transactional
+    public void applicationTest() throws Exception {
+//        PersonEntity onePerson = personRepository.findOne(UUID.fromString("c17f6a59-278b-4e16-9add-91280a224a54"));
+//        TariffStrategyEntity oneStrategy = tariffStrategyRepository.findOne((long) 4862);
+//
+//        billingFeeList.setUserUuid(onePerson.getPerson_uuid());
+//        billingFeeList.setCreateTime(LocalDateTime.now());
+//
+//        ruleEngineService.addDrlFile(oneStrategy.getDrlFile());
+//        ruleEngineService.buildSessoin();
+//        ruleEngineService.setGlobal("billingFeeList", billingFeeList);
+//        ruleEngineService.addFacts(onePerson);
+//        ruleEngineService.addFacts(oneStrategy);
+//        int rules = ruleEngineService.execution();
+//
+////        session.setGlobal("billingFeeList", billingFeeList);
+////        session.insert(onePerson);
+////        session.insert(oneStrategy);
+////        session.fireAllRules();
+////        session.dispose();
+//
+//        System.out.println(billingFeeList.getBillingFeeList().size());
+        BillingFeeList billingFeeList = databaseService.userStartAStrategy("d5ce0029-e821-4096-98be-6565a296892b", (long) 5267);
+    }
+}

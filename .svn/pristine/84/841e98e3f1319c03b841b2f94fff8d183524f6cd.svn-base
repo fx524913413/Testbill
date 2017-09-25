@@ -1,0 +1,115 @@
+package com.ruijie.spl.billingEngine.booking.entity;
+
+import java.util.Set;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "MainAccount_info")
+public class MainAccount_info {
+	
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private int id;
+
+    private String AccountKey;
+
+	@Column(name = "Account_Type")
+    private String AccountType;
+    @Column(name = "Amount")
+    private Double Amount;
+
+    @Column(name = "Unit")
+    private String Unit;
+
+    @OneToOne(targetEntity=User_info.class,mappedBy="MainAccount")
+    private User_info UserInfo;
+    
+    @OneToMany(targetEntity=SubAccount_info.class,mappedBy="FatherAcctKey",cascade=CascadeType.PERSIST,fetch=FetchType.EAGER)
+    private Set<SubAccount_info> SubAccountinfo;
+    
+	public String getAccountKey() {
+		return AccountKey;
+	}
+
+
+	public void setAccountKey(String accountKey) {
+		AccountKey = accountKey;
+	}
+
+
+	public String getAccountType() {
+		return AccountType;
+	}
+
+
+	public void setAccountType(String accountType) {
+		AccountType = accountType;
+	}
+
+
+	public Double getAmount() {
+		return Amount;
+	}
+
+
+	public void setAmount(Double amount) {
+		Amount = amount;
+	}
+
+
+
+	public String getUnit() {
+		return Unit;
+	}
+
+	public void setUnit(String unit) {
+		Unit = unit;
+	}
+
+
+	public User_info getUserInfo() {
+		return UserInfo;
+	}
+
+
+	public void setUserInfo(User_info userInfo) {
+		UserInfo = userInfo;
+	}
+
+
+	public Set<SubAccount_info> getSubAccountinfo() {
+		return SubAccountinfo;
+	}
+
+
+	public void setSubAccountinfo(Set<SubAccount_info> subAccountinfo) {
+		SubAccountinfo = subAccountinfo;
+	}
+
+
+	public int getId() {
+		return id;
+	}
+
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+
+	
+}
+

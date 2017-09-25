@@ -1,0 +1,16 @@
+/*包名，必须具有，指限于逻辑上的管理，若自定义查询或者函数属于同一包名，不管物理位置如何，都可以调用*/
+package com.ruijie.spl.billingEngine.billing.fakeRules;
+dialect  "mvel"
+
+import  /*需要导入的类名*/
+global  /*全局变量*/
+function /*函数*/
+query   /*查询*/
+
+rule "fakeRule"
+    attributes /*一些执行规则相关的属性*/
+    when
+        /*条件*/
+    then
+        /*操作与结果*/
+end

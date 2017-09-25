@@ -1,0 +1,11 @@
+package com.ruijie.spl.billingEngine.billing.repository;
+
+import com.ruijie.spl.billingEngine.billing.entity.TariffStrategyEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+/**
+ * Created by Administrator on 2017/8/31.
+ */
+public interface TariffStrategyRepository extends JpaRepository<TariffStrategyEntity, Long> {
+    TariffStrategyEntity findByTariffStrategyName(String tariffStrategyName);
+}

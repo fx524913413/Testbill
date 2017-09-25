@@ -1,0 +1,40 @@
+package com.ruijie.spl.billingEngine.billing.controller;
+
+import com.ruijie.spl.billingEngine.billing.beans.BillingFeeList;
+import com.ruijie.spl.billingEngine.billing.entity.PersonEntity;
+import com.ruijie.spl.billingEngine.billing.repository.PersonRepository;
+import com.ruijie.spl.billingEngine.billing.service.TestDatabaseService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
+
+/**
+ * Created by Administrator on 2017/9/6.
+ */
+@RestController
+@RequestMapping("/persontest")
+public class PersonInfoController {
+    private PersonRepository personRepository;
+    @Autowired
+    private TestDatabaseService testDatabaseService;
+
+    @Autowired
+    public PersonInfoController(PersonRepository personRepository) {
+        this.personRepository = personRepository;
+    }
+
+    @RequestMapping(value = "/getUserByUuid/{uuid}", method = {RequestMethod.GET})
+    public PersonEntity getUserById(@PathVariable String uuid) {
+        UUID dd = UUID.fromString(uuid);
+        return personRepository.findOne(dd);
+    }
+
+    @RequestMapping(value = "/createNewStrategy/{userUUID}/{strategyId}", method = {RequestMethod.GET})
+    public BillingFeeList createNewStrategyForUser(@PathVariable("userUUID") String userUUID, @PathVariable("strategyId") String strategyId) throws Exception {
+        return testDatabaseService.userStartAStrategy(userUUID, Long.valueOf(strategyId));
+    }
+}

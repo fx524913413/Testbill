@@ -1,0 +1,10 @@
+package com.ruijie.spl.billingEngine.booking.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.ruijie.spl.billingEngine.booking.entity.Acc_Relation;
+import com.ruijie.spl.billingEngine.booking.entity.MainAccount_info;
+
+public interface AccRelationRepository extends JpaRepository<Acc_Relation,Long> {
+	Acc_Relation findByAccountTypeBookAndSourceFeeID(String accountTypesss,String sourceId);
+}

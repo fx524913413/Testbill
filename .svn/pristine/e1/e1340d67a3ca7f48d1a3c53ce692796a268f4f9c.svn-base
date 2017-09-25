@@ -1,0 +1,98 @@
+package com.ruijie.spl.billingEngine.booking.entity;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+@JsonIgnoreProperties(value={"transportOrders"})  //用于当controller需要返回具体一个账户集（Set）时，出现死循环，导致无限递归
+@Entity
+@Table(name = "SubAccount_info")
+public class SubAccount_info {
+	@Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
+	
+	
+    private String AccountKey;
+
+	@Column(name = "Account_Type")
+    private String AccountType;
+    @Column(name = "Amount")
+    private Double Amount;
+
+    
+    @Column(name = "Unit")
+    private String Unit;
+    
+    @ManyToOne
+    @JoinColumn(name = "Father_AcctKey")
+    private MainAccount_info FatherAcctKey;
+
+	public String getAccountKey() {
+		return AccountKey;
+	}
+
+
+	public void setAccountKey(String accountKey) {
+		AccountKey = accountKey;
+	}
+
+
+	public String getAccountType() {
+		return AccountType;
+	}
+
+
+	public void setAccountType(String accountType) {
+		AccountType = accountType;
+	}
+
+
+	public Double getAmount() {
+		return Amount;
+	}
+
+
+	public void setAmount(Double amount) {
+		Amount = amount;
+	}
+
+
+
+	public String getUnit() {
+		return Unit;
+	}
+
+	public void setUnit(String unit) {
+		Unit = unit;
+	}
+
+
+	public MainAccount_info getFatherAcctKey() {
+		return FatherAcctKey;
+	}
+
+
+	public void setFatherAcctKey(MainAccount_info fatherAcctKey) {
+		FatherAcctKey = fatherAcctKey;
+	}
+
+
+	public long getId() {
+		return id;
+	}
+
+
+	public void setId(long id) {
+		this.id = id;
+	}
+	
+}
+

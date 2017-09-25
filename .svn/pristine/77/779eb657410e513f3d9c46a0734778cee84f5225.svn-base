@@ -1,0 +1,9 @@
+package com.ruijie.spl.billingEngine.preprocess.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.ruijie.spl.billingEngine.preprocess.entity.DroolRule;
+
+public interface DroolsRepository extends JpaRepository<DroolRule, Integer>{
+
+}

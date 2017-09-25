@@ -1,0 +1,117 @@
+package com.ruijie.spl.billingEngine.booking.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "Bill")
+public class Bill {
+	@Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private String Bill_Id;
+
+	@Column(name = "UserKey")
+    private String UserKey;
+
+	@Column(name = "AccountKey")
+    private String AccountKey;
+
+	@Column(name = "AccountTypeBook")
+    private String AccountTypeBook;
+
+	@Column(name = "BillAmount")
+    private String BillAmount;
+
+	@Column(name = "CreatedDate")
+    private String CreatedDate;
+
+	@Column(name = "AccountAmount")
+    private String AccountAmount;
+
+	@Column(name = "Detailrecord")
+    private String Detailrecord;
+
+	@Column(name = "SourceFeeID")
+    private String SourceFeeID;
+
+
+	
+	public String getUserKey() {
+		return UserKey;
+	}
+
+	public void setUserKey(String userKey) {
+		UserKey = userKey;
+	}
+
+	public String getBill_Id() {
+		return Bill_Id;
+	}
+
+	public void setBill_Id(String bill_Id) {
+		Bill_Id = bill_Id;
+	}
+
+	public String getAccountKey() {
+		return AccountKey;
+	}
+
+	public void setAccountKey(String accountKey) {
+		AccountKey = accountKey;
+	}
+
+	public String getAccountTypeBook() {
+		return AccountTypeBook;
+	}
+
+	public void setAccountTypeBook(String accountTypeBook) {
+		AccountTypeBook = accountTypeBook;
+	}
+
+	public String getBillAmount() {
+		return BillAmount;
+	}
+
+	public void setBillAmount(String billAmount) {
+		BillAmount = billAmount;
+	}
+
+	public String getCreatedDate() {
+		return CreatedDate;
+	}
+
+	public void setCreatedDate(String createdDate) {
+		CreatedDate = createdDate;
+	}
+
+	public String getAccountAmount() {
+		return AccountAmount;
+	}
+
+	public void setAccountAmount(String accountAmount) {
+		AccountAmount = accountAmount;
+	}
+
+	public String getDetailrecord() {
+		return Detailrecord;
+	}
+
+	public void setDetailrecord(String detailrecord) {
+		Detailrecord = detailrecord;
+	}
+
+	public String getSourceFeeID() {
+		return SourceFeeID;
+	}
+
+	public void setSourceFeeID(String sourceFeeID) {
+		SourceFeeID = sourceFeeID;
+	}
+
+	
+	
+}

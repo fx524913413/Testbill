@@ -1,0 +1,249 @@
+package com.ruijie.spl.billingEngine.billing.service;
+
+import com.ruijie.spl.billingEngine.billing.beans.BillingFeeList;
+import com.ruijie.spl.billingEngine.billing.dataEnum.*;
+import com.ruijie.spl.billingEngine.billing.entity.*;
+import com.ruijie.spl.billingEngine.billing.repository.PersonRepository;
+import com.ruijie.spl.billingEngine.billing.repository.TariffStrategyRepository;
+import com.ruijie.spl.billingEngine.common.helper.DrlFileProcessorHelper;
+import com.ruijie.spl.billingEngine.interfacebean.ruleEngine.RuleEngineService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.FileNotFoundException;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.IntStream;
+
+/**
+ * Created by Administrator on 2017/9/6.
+ */
+@Component
+public class TestDatabaseServiceImpl implements TestDatabaseService {
+    @Autowired
+    private PersonRepository personRepository;
+    @Autowired
+    private DrlFileProcessorHelper drlHelper;
+    @Autowired
+    private TariffStrategyRepository tariffStrategyRepository;
+    @Autowired
+    private RuleEngineService ruleEngineService;
+    @Autowired
+    private BillingFeeList billingFeeList;
+
+    private Random random = new Random();
+    private final int CONSTCOUNT = 6;
+
+    private ClassLoader systemClassLoader = TestDatabaseServiceImpl.class.getClassLoader();
+
+    String[] firstNames = new String[]{"Kobe", "Curry", "James", "Durant", "Harden", "John"};
+    String[] lastNames = new String[]{"Bryant", "Steve", "LeBron", "Kevin", "James", "Wall"};
+    int[] ages = new int[]{28, 14, 23, 12, 15, 29};
+
+    @Override
+    @Transactional
+    public void createRecords() throws FileNotFoundException {
+
+        //region ++++生成资费策略记录
+        if (tariffStrategyRepository.count() > 0)
+            tariffStrategyRepository.deleteAll();
+         /*插入三个规则文件*/
+        TariffStrategyEntity entity1 = new TariffStrategyEntity();
+        entity1.setTariffStrategyName("0000");
+        entity1.setDescription("周期扣费策略，10元30天");
+        entity1.setTariffStrategyType(TariffStrategyTypeEnum.Period);
+        entity1.setDrlFile(drlHelper.drlFileToString(systemClassLoader.getResource("com/ruijie/spl/billingEngine/billing/rules/0000Rule.drl").getPath()));
+        entity1.setCreateTime(LocalDateTime.now());
+
+        TariffStrategyEntity entity2 = new TariffStrategyEntity();
+        entity2.setTariffStrategyName("1000");
+        entity2.setDescription("国际下行流量扣费规则，0~20M 2元/M，大于20M 1元/M");
+        entity2.setDrlFile(drlHelper.drlFileToString(systemClassLoader.getResource("com/ruijie/spl/billingEngine/billing/rules/1000Rule.drl").getPath()));
+        entity2.setCreateTime(LocalDateTime.now());
+
+        TariffStrategyEntity entity3 = new TariffStrategyEntity();
+        entity3.setTariffStrategyName("ARule");
+        entity3.setDescription("用于测试的一个Rule");
+        entity3.setDrlFile(drlHelper.drlFileToString(systemClassLoader.getResource("com/ruijie/spl/billingEngine/billing/rules/ARule.drl").getPath()));
+        entity3.setCreateTime(LocalDateTime.now());
+
+        List<TariffStrategyEntity> tariffStrategyEntityList = new ArrayList<>();
+        tariffStrategyEntityList.add(entity1);
+        tariffStrategyEntityList.add(entity2);
+        tariffStrategyEntityList.add(entity3);
+        tariffStrategyRepository.save(tariffStrategyEntityList);
+        //endregion
+
+        //region ++++生成用户记录，以及关联的账户记录，业务量记录
+        if (personRepository.count() > 0)
+            personRepository.deleteAll();
+
+        TariffStrategyEntity rule0000 = tariffStrategyRepository.findByTariffStrategyName("0000");
+        TariffStrategyEntity rule1000 = tariffStrategyRepository.findByTariffStrategyName("1000");
+        TariffStrategyEntity aRule = tariffStrategyRepository.findByTariffStrategyName("ARule");
+
+        List<PersonEntity> entities = new ArrayList<>();
+
+        IntStream.rangeClosed(1, 200).forEach(o -> {
+
+            PersonEntity entity = new PersonEntity();
+            LocalDateTime nowTime = LocalDateTime.now();
+
+            /*设置基本信息*/
+            entity.setFirstName(firstNames[random.nextInt(CONSTCOUNT)]);
+            entity.setLastName(lastNames[random.nextInt(CONSTCOUNT)]);
+            int nextInt = random.nextInt(CONSTCOUNT);
+            entity.setAge(ages[nextInt]);
+            entity.setCreateTime(nowTime);
+            entity.setLastUpdateTime(nowTime);
+            entity.setUserSex(SexEnum.values()[random.nextInt(SexEnum.values().length)]);
+            entity.setUserState(UserStateEnum.values()[random.nextInt(UserStateEnum.values().length)]);
+
+            /*设置关联的资费策略信息*/
+            if (ages[nextInt] >= 18)
+                entity.getTariffStrategies().add(rule1000);
+            entity.getTariffStrategies().add(rule0000);
+            entity.getTariffStrategies().add(aRule);
+
+            /*添加基本账户*/
+            NormalAccountInfoEntity accountInfoEntity = new NormalAccountInfoEntity();
+            accountInfoEntity.setAccountState(AccountStateEnum.Normal);
+            accountInfoEntity.setAccountUsage(true);
+            accountInfoEntity.setCreateTime(nowTime);
+            accountInfoEntity.setUpdateTime(nowTime);
+            accountInfoEntity.setLowerLimit(BigDecimal.ZERO);
+            accountInfoEntity.setPersonRelation(entity);
+            accountInfoEntity.setAccountName("金额账户");
+            accountInfoEntity.setAccountLevel(AccountLevelEnum.Base);
+            accountInfoEntity.setFeeObjectType(FeeObjectTypeEnum.Money);
+            accountInfoEntity.setFeeObjectUnit(FeeObjectUnitEnum.Fen);
+            accountInfoEntity.setFeeObjectAmount(BigDecimal.valueOf(random.nextDouble() * 10000));
+            entity.getNormalAccounts().add(accountInfoEntity);
+
+            if (o % 3 == 0) {
+                /*每隔三个用户添加赠送的流量账户*/
+                NormalAccountInfoEntity flowAccount = new NormalAccountInfoEntity();
+                flowAccount.setAccountUsage(true);
+                flowAccount.setCreateTime(nowTime);
+                flowAccount.setUpdateTime(nowTime);
+                flowAccount.setLowerLimit(BigDecimal.ZERO);
+                flowAccount.setPersonRelation(entity);
+                flowAccount.setAccountName("流量账户");
+                flowAccount.setAccountLevel(AccountLevelEnum.Present);
+                flowAccount.setFeeObjectType(FeeObjectTypeEnum.Flow);
+                flowAccount.setFeeObjectUnit(FeeObjectUnitEnum.M);
+                flowAccount.setFeeObjectAmount(BigDecimal.valueOf(random.nextDouble() * 100));
+                entity.getNormalAccounts().add(flowAccount);
+            }
+
+//            if (o % 5 == 0) {
+            /*所有用户添加周期账户（都关联周期资费策略）*/
+            PeriodAccountInfoEntity periodAccount = new PeriodAccountInfoEntity();
+            periodAccount.setAccountName("周期账户");
+            periodAccount.setTariffStrategyName(rule0000.getTariffStrategyName());
+            periodAccount.setCreateTime(nowTime);
+            periodAccount.setUpdateTime(nowTime);
+            periodAccount.setLowerLimit(BigDecimal.ZERO);
+            periodAccount.setPersonRelation(entity);
+            periodAccount.setAccountLevel(AccountLevelEnum.Package);
+            periodAccount.setFeeObjectType(FeeObjectTypeEnum.PeriodTime);
+            periodAccount.setFeeObjectUnit(FeeObjectUnitEnum.Day);
+
+            int days = random.nextInt(31);
+            periodAccount.setFeeObjectAmount(BigDecimal.valueOf(days));
+            periodAccount.setNextBillingTime(nowTime.plusDays(days).toLocalDate().atStartOfDay());
+
+            BusinessVolumeEntity cumulant = new BusinessVolumeEntity();
+            cumulant.setInlandDownFlow(BigDecimal.valueOf(random.nextDouble() * 100));
+            cumulant.setInlandUpFlow(BigDecimal.valueOf(random.nextDouble() * 100));
+            cumulant.setForeignDownFlow(BigDecimal.valueOf(random.nextDouble() * 100));
+            cumulant.setForeignUpFlow(BigDecimal.valueOf(random.nextDouble() * 100));
+            cumulant.setBusinessVolumeType(BusinessVolumeTypeEnum.Cumulant);
+            cumulant.setAccountRelation(periodAccount);
+
+            BusinessVolumeEntity packageVolume = new BusinessVolumeEntity();
+            packageVolume.setForeignUpFlow(BigDecimal.valueOf(random.nextDouble() * 100));
+            packageVolume.setForeignDownFlow(BigDecimal.valueOf(random.nextDouble() * 100));
+            packageVolume.setInlandUpFlow(BigDecimal.valueOf(random.nextDouble() * 100));
+            packageVolume.setInlandDownFlow(BigDecimal.valueOf(random.nextDouble() * 100));
+            packageVolume.setBusinessVolumeType(BusinessVolumeTypeEnum.Attached);
+            packageVolume.setAccountRelation(periodAccount);
+
+            periodAccount.getBusinessVolumeRelation().add(cumulant);
+            periodAccount.getBusinessVolumeRelation().add(packageVolume);
+
+            entity.getPeriodAccounts().add(periodAccount);
+//            }
+
+            /*对于名不为“James”的用户添加信用账户*/
+            if (!entity.getLastName().equals("James")) {
+                NormalAccountInfoEntity normalAccountInfoEntity = new NormalAccountInfoEntity();
+                normalAccountInfoEntity.setAccountName("信用账户");
+                normalAccountInfoEntity.setAccountUsage(true);
+                normalAccountInfoEntity.setCreateTime(nowTime);
+                normalAccountInfoEntity.setUpdateTime(nowTime);
+                normalAccountInfoEntity.setUpperLimit(BigDecimal.valueOf(random.nextInt(3000) + 2000));
+                normalAccountInfoEntity.setLowerLimit(BigDecimal.ZERO);
+                normalAccountInfoEntity.setAccountLevel(AccountLevelEnum.OverDraw);
+                normalAccountInfoEntity.setFeeObjectType(FeeObjectTypeEnum.Money);
+                normalAccountInfoEntity.setFeeObjectAmount(BigDecimal.ZERO);
+                normalAccountInfoEntity.setFeeObjectUnit(FeeObjectUnitEnum.Fen);
+
+                normalAccountInfoEntity.setPersonRelation(entity);
+                entity.getNormalAccounts().add(normalAccountInfoEntity);
+            }
+
+            entities.add(entity);
+            /*personRepository.save(entity);*/
+        });
+
+        personRepository.save(entities);
+        //endregion
+    }
+
+    @Override
+    public void createTariffStrategy() throws FileNotFoundException {
+        TariffStrategyEntity entity = new TariffStrategyEntity();
+        entity.setTariffStrategyName("0001");
+        entity.setDescription("周期扣费策略，20元30天，赠送100M国内上行流量，100国内下行流量；流量使用规则：1元/M国内上行流量，0.5元/M国内下行流量");
+        entity.setDrlFile(drlHelper.drlFileToString(systemClassLoader.getResource("com/ruijie/spl/billingEngine/billing/rules/0001Rule.drl").getPath()));
+        entity.setCreateTime(LocalDateTime.now());
+        entity.setTariffStrategyType(TariffStrategyTypeEnum.Period);
+
+        tariffStrategyRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void addAPeriodTariffStrategyForAUser(String userUuid, Long strategyId) {
+        PersonEntity one = personRepository.findOne(UUID.fromString(userUuid));
+        TariffStrategyEntity strategyEntity = tariffStrategyRepository.findOne(strategyId);
+
+        if (one.getPeriodAccounts().parallelStream().noneMatch(o -> Objects.equals(strategyEntity.getTariffStrategyName(), o.getAccountName()))) {
+            one.getTariffStrategies().add(strategyEntity);
+
+            personRepository.save(one);
+        }
+    }
+
+    @Override
+    @Transactional
+    public BillingFeeList userStartAStrategy(String userUuid, Long strategyId) throws Exception {
+        PersonEntity onePerson = personRepository.findOne(UUID.fromString(userUuid));
+        TariffStrategyEntity oneStrategy = tariffStrategyRepository.findOne(strategyId);
+
+        billingFeeList.setUserUuid(onePerson.getPerson_uuid());
+        billingFeeList.setCreateTime(LocalDateTime.now());
+
+        ruleEngineService.addDrlFile(oneStrategy.getDrlFile());
+        ruleEngineService.buildSessoin();
+        ruleEngineService.setGlobal("billingFeeList", billingFeeList);
+        ruleEngineService.addFacts(onePerson);
+        ruleEngineService.addFacts(oneStrategy);
+        ruleEngineService.execution();
+
+        return billingFeeList;
+    }
+}

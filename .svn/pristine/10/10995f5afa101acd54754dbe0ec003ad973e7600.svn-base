@@ -1,0 +1,88 @@
+package com.ruijie.spl.billingEngine.billing.beans;
+
+import com.ruijie.spl.billingEngine.billing.dataEnum.BillingFeeOperationTypeEnum;
+import com.ruijie.spl.billingEngine.billing.dataEnum.FeeObjectUnitEnum;
+import com.ruijie.spl.billingEngine.billing.dataEnum.FeeTypeEnum;
+
+import java.math.BigDecimal;
+
+/**
+ * Created by Administrator on 2017/9/4.
+ */
+public class BillingFee {
+    private BigDecimal count;                   //通常是费用项的金额
+    private FeeTypeEnum feeType;                //指定费用项的类型
+    private BigDecimal usageAmount;             //通常是费用项的使用量，如流量、时长、周期
+    private FeeObjectUnitEnum unit;             //用于指定使用量（usageAmount）的单位
+    private String tariffName;                  //关联的资费策略的名字（通常周期性费用项需要设置该项）
+    private BillingFeeOperationTypeEnum billingFeeOperationType;        //费用项的操作类型（需要判断增加、删除或使用时设置该项）
+
+    public BillingFee() {
+        this(BigDecimal.ZERO, null, null);
+    }
+
+    public BillingFee(BigDecimal count, FeeTypeEnum feeType) {
+        this(count, feeType, null);
+    }
+
+    public BillingFee(BigDecimal count, FeeTypeEnum feeType, String tariffName) {
+        this(count, feeType, null, null, tariffName, BillingFeeOperationTypeEnum.Add);
+    }
+
+    public BillingFee(BigDecimal count, FeeTypeEnum feeType, String tariffName, BillingFeeOperationTypeEnum billingFeeOperationType) {
+        this(count, feeType, null, null, tariffName, billingFeeOperationType);
+    }
+
+    public BillingFee(BigDecimal count, FeeTypeEnum feeType, BigDecimal usageAmount, FeeObjectUnitEnum unit, String tariffName) {
+        this(count, feeType, usageAmount, unit, tariffName, BillingFeeOperationTypeEnum.Add);
+    }
+
+    public BillingFee(BigDecimal count, FeeTypeEnum feeType, BigDecimal usageAmount, FeeObjectUnitEnum unit, String tariffName, BillingFeeOperationTypeEnum billingFeeOperationType) {
+        this.count = count;
+        this.feeType = feeType;
+        this.usageAmount = usageAmount;
+        this.unit = unit;
+        this.tariffName = tariffName;
+        this.billingFeeOperationType = billingFeeOperationType;
+    }
+
+    public BigDecimal getCount() {
+        return count;
+    }
+
+    public void setCount(BigDecimal count) {
+        this.count = count;
+    }
+
+    public FeeTypeEnum getFeeType() {
+        return feeType;
+    }
+
+    public void setFeeType(FeeTypeEnum feeType) {
+        this.feeType = feeType;
+    }
+
+    public String getTariffName() {
+        return tariffName;
+    }
+
+    public void setTariffName(String tariffName) {
+        this.tariffName = tariffName;
+    }
+
+    public BigDecimal getUsageAmount() {
+        return usageAmount;
+    }
+
+    public void setUsageAmount(BigDecimal usageAmount) {
+        this.usageAmount = usageAmount;
+    }
+
+    public FeeObjectUnitEnum getUnit() {
+        return unit;
+    }
+
+    public void setUnit(FeeObjectUnitEnum unit) {
+        this.unit = unit;
+    }
+}

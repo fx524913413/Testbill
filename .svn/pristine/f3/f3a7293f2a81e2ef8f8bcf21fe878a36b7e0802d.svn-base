@@ -1,0 +1,20 @@
+package com.ruijie.spl.billingEngine.billing.service;
+
+import com.ruijie.spl.billingEngine.billing.beans.BillingFeeList;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.FileNotFoundException;
+
+/**
+ * Created by Administrator on 2017/9/6.
+ */
+public interface TestDatabaseService {
+    void createRecords() throws FileNotFoundException;
+
+    void createTariffStrategy() throws FileNotFoundException;
+
+    void addAPeriodTariffStrategyForAUser(String userUuid, Long strategyId);
+
+    @Transactional
+    BillingFeeList userStartAStrategy(String userUuid, Long strategyId) throws Exception;
+}

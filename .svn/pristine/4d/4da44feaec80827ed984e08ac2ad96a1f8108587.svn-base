@@ -1,0 +1,20 @@
+//created on: 2017-9-5
+package com.ruijie.spl.billingEngine.preprocess.rules
+
+//list any import classes here.
+import com.ruijie.spl.billingEngine.preprocess.entity.PreprocessInParameters;
+import com.ruijie.spl.billingEngine.preprocess.service.PreprocessForOpenUser;
+import com.ruijie.spl.billingEngine.preprocess.service.PreprocessForBillEngine
+
+//declare any global variables here
+
+rule "createUser Rule"
+
+    when
+        preprocessInParameters:PreprocessInParameters(eventType==0)
+    then
+        PreprocessForBillEngine preprocessForBillEngine=new PreprocessForOpenUser();
+		preprocessForBillEngine.preprocess(preprocessInParameters);
+end
+
+

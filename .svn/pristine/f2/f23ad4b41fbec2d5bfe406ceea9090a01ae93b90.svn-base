@@ -1,0 +1,14 @@
+package com.ruijie.spl.billingEngine.billing.repository;
+
+import com.ruijie.spl.billingEngine.billing.entity.PersonEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Created by Administrator on 2017/8/31.
+ */
+public interface PersonRepository extends JpaRepository<PersonEntity, UUID> {
+    List<PersonEntity> findByFirstName(String firstName);
+}

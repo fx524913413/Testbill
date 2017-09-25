@@ -1,0 +1,9 @@
+package com.ruijie.spl.billingEngine.booking.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.ruijie.spl.billingEngine.booking.entity.SubAccount_info;
+
+public interface SubAccountRepository extends JpaRepository<SubAccount_info, Long>{
+
+}

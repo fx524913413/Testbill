@@ -1,0 +1,104 @@
+package com.ruijie.spl.billingEngine.booking.service;
+
+import java.util.*;
+
+import com.ruijie.spl.billingEngine.booking.entity.Account_info;
+import com.ruijie.spl.billingEngine.booking.repository.AccountRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+
+import com.ruijie.spl.billingEngine.booking.entity.Acc_Relation;
+import com.ruijie.spl.billingEngine.booking.entity.User_info;
+import com.ruijie.spl.billingEngine.booking.repository.AccRelationRepository;
+import com.ruijie.spl.billingEngine.booking.repository.User_InfoRepository;
+
+@Service
+public class User_booking_service {
+	@Autowired
+	private User_InfoRepository repostor;
+	@Autowired
+    private AccountRepository accRepository;
+    @Autowired
+	private AccRelationRepository AccRelRepository;
+	
+	@Transactional
+    public void executionSourceFeeItem(UUID userid, Integer sourcefeeid, Double fee, String subsectionflow) {//分段流量计费测试
+        //if (sourcefeeid > 0 && sourcefeeid < 20000) {//此区间为扣流量费用项ID专用
+        System.out.println("stand here");
+        User_info info = repostor.findByuseruuid(userid);//通过用户ID查询用户表
+        Map<Integer, Account_info> accpririty = new TreeMap<Integer, Account_info>();
+
+        Set<Account_info> accounts = accRepository.findAllByuseruuid(userid);//得到账户对象
+        Set<Acc_Relation> accRelations = AccRelRepository.findBySourceFeeID(sourcefeeid);//根据费用项ID得到入账关系集
+        Account_info creditAccount = new Account_info();//储存此用户的信用账户
+
+        for (Acc_Relation obj4accrelation : accRelations) {
+            for (Account_info obj4acc : accounts) {
+                if (Objects.equals(obj4acc.getAccountType(), obj4accrelation.getAccountTypeBook())) {//判断此账户类型是否存在于此条入账关系记录里
+                    Acc_Relation acc_Relation2 = AccRelRepository.findByAccountTypeBookAndSourceFeeID(obj4acc.getAccountType(), sourcefeeid);//得到入账关系表决定的子账户相关属性
+                    accpririty.put(acc_Relation2.getPriority(), obj4acc);//将账户的优先值和子账户对象插入map对象,如果优先值同之前插入的某一项一样，则不会插入这一对数据
+                    System.out.println("i will be away");
+                }
+                if (obj4acc.getAccountType().equals("creditAccount")) { //信用账户不进入费用项关系表进行优先度筛选
+                    creditAccount = obj4acc;//获取到信用账户
+                }
+            }
+        }
+        double n = fee;//n用于模拟扣数据量
+        double Mfee = 0;
+        Set<Map.Entry<Integer, Account_info>> entrysetSet = accpririty.entrySet();//此为遍历map类型的方法
+        for (Map.Entry<Integer, Account_info> obj4acc : entrysetSet) {
+            Account_info objAccount = obj4acc.getValue();
+            if (/*!objAccount.getBusinessType().equals(subsectionflow)&&*/!objAccount.getAccountType().equals("balance")) { //进来的不是不是余额账户，而是赠送、剩余流量、分段流量账户
+                if (objAccount.getAmount() < n) {
+                    Mfee = Mfee + objAccount.getAmount() * objAccount.getRate();
+                    n = n - objAccount.getAmount();
+                    objAccount.setAmount(0.0);
+                } else {
+                    Mfee = Mfee + n * objAccount.getRate();
+                    objAccount.setAmount(objAccount.getAmount() - n);
+                    n = 0;
+                }
+            }
+            if (objAccount.getAccountType().equals("balance")) { //如果是余额账户
+                if (objAccount.getAmount() < Mfee) {
+                    if (objAccount.isFatheraccount()) { //允许透支
+                        objAccount.setAmount(0.0);
+                        creditAccount.setAmount(creditAccount.getAmount() - Mfee);
+                        Mfee = 0;
+                    } else { //不允许透支
+                        objAccount.setAmount(objAccount.getAmount() - Mfee);
+                        Mfee = 0;
+                    }
+                } else {
+                    objAccount.setAmount(objAccount.getAmount() - Mfee);
+                    Mfee = 0;
+                }
+            }
+        }
+    }
+
+    @Transactional
+    public void createNewsetmenu(UUID userid, Integer sourcefeeid, Map<String, Double> cerate) {
+        if (sourcefeeid > 0 && sourcefeeid < 1000) {//判断此sourcefeeid为增加用户套餐，sourcefeeid为其他作用的判断在此不做阐述
+            User_info info = repostor.findByuseruuid(userid);
+//			Set<Account_info> accounts = new HashSet<Account_info>();
+            Set<Map.Entry<String, Double>> entrysetSet = cerate.entrySet();//此为遍历map类型的方法
+            for (Map.Entry<String, Double> obj4acc : entrysetSet) {
+//				System.out.println(obj4acc.getKey());
+//				System.out.println(obj4acc.getValue());
+                Account_info account = new Account_info();
+                account.setAccountType(obj4acc.getKey());
+                account.setAmount(obj4acc.getValue());
+                account.setUseruuid(userid);
+                accRepository.save(account);
+            }
+        }
+    }
+
+
+
+
+}

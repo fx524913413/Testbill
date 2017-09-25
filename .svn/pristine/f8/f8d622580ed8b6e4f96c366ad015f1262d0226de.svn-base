@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/billingEngine.billing.iml" filepath="$PROJECT_DIR$/billingEngine.billing.iml" />
+      <module fileurl="file://F:\SVN\billingEngine.ruleEngine\billingEngine.ruleEngine.iml" filepath="F:\SVN\billingEngine.ruleEngine\billingEngine.ruleEngine.iml" />
+    </modules>
+  </component>
+</project>

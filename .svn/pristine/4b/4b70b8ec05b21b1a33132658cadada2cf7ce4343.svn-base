@@ -1,0 +1,33 @@
+package com.ruijie.spl.billingEngine.billing.tariffStrategies;
+dialect  "mvel"
+
+import com.ruijie.spl.billingEngine.billing.entity.*
+import java.math.BigDecimal
+import com.ruijie.spl.billingEngine.billing.dataEnum.FeeTypeEnum
+import com.ruijie.spl.billingEngine.billing.beans.*;
+import com.ruijie.spl.billingEngine.preprocess.entity.*;
+import java.time.*;
+import com.ruijie.spl.billingEngine.common.helper.*;
+import com.ruijie.spl.billingEngine.billing.dataEnum.*;
+
+/*一个周期型资费策略，20元每月*/
+global BillingFeeList billingFeeList;
+
+rule "周期续费"
+    when
+        $p:PersonEntity($perriodAccounts:periodAccounts,$tariffStrategies:tariffStrategies)
+        TariffStrategyEntity($tariffName:tariffStrategyName) from $tariffStrategies
+        $periodAccount:PeriodAccountInfoEntity($periodTariffName:tariffStrategyName==$tariffName) from $perriodAccounts
+        PreprocessOutParameters(preprocessOutParameters[PreprocessOutString.currentSystemTime]>$periodAccount.nextBillingTime)
+    then
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(20),FeeTypeEnum.Period_Fee,$tariffName));
+end
+
+rule "周期开通"
+    when
+        TariffStrategyEntity($tariff:tariffStrategyId,$tariffName:tariffStrategyName)
+        PersonEntity($tariffStrategies:tariffStrategies)
+        not(TariffStrategyEntity(tariffStrategyId==$tariff) from $tariffStrategies)
+    then
+        billingFeeList.addBillingFee(new BillingFee(BigDecimal.valueOf(20),FeeTypeEnum.Period_Fee,BigDecimal.valueOf(30),FeeObjectUnitEnum.Day,$tariffName,BillingFeeOperationTypeEnum.Add));
+end

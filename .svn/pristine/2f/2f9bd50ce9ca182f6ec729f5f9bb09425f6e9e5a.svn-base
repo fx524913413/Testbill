@@ -1,0 +1,15 @@
+package com.ruijie.spl.billingEngine.billing.dataEnum;
+
+/**
+ * Created by Administrator on 2017/9/6.
+ */
+public enum BusinessVolumeTypeEnum {
+    /**
+     * 表示累积业务量(通常关联到周期型账务)
+     */
+    Cumulant,
+    /**
+     * 表示附加业务量（通常关联到周期型账务）
+     */
+    Attached
+}

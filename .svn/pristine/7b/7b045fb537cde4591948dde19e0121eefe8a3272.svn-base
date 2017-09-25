@@ -1,0 +1,47 @@
+package com.ruijie.spl.billingEngine.booking.controller;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+//import com.ruijie.spl.billingEngine.booking.service.User_booking_service;
+
+
+@RestController
+@RequestMapping("/dbtest_booking")
+public class Booking_Controller {
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+//    @Autowired
+//    private User_booking_service booking_service;
+    
+    /*@RequestMapping(value="/getUsers",method = {RequestMethod.GET })
+    public List<User> getUsers(){
+    	logger.error("haha");
+    	return booking_Repository.findAll();
+    }
+    
+    @RequestMapping(value="/getUserByUuid/{uuid}",method = {RequestMethod.GET })
+    public User getUserById(@PathVariable Integer uuid){
+    	return booking_Repository.findOne(uuid);
+    }
+    
+    
+    @RequestMapping(value="/createUser",method = {RequestMethod.POST})
+    public User createUser(@RequestParam User userInfo){
+    	return booking_service.addUser(userInfo);
+    }*/
+    
+    /*@RequestMapping(value="/executionSourceFeeItem/{userid}/{sourcefeeid}/{fee}",method = {RequestMethod.POST})
+    public String executionSourceid(@PathVariable Integer userid,@PathVariable String sourcefeeid,@PathVariable Double fee,){
+    }*/
+
+    @RequestMapping(value = "/executionSourceFeeItem/{userid}/{sourcefeeid}/{fee}", method = {RequestMethod.POST})
+    public void createNewStrategyForUser(@PathVariable("userid") Integer userid, @PathVariable("sourcefeeid") String sourcefeeid,@PathVariable("fee") Double fee) throws Exception {
+        //logger.error("try test");
+//    	 booking_service.executionSourceFeeItem(userid, sourcefeeid, fee);
+    }
+}

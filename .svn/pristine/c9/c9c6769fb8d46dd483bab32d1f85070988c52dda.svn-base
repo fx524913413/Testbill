@@ -1,0 +1,12 @@
+package com.ruijie.spl.billingEngine.billing.repository;
+
+import com.ruijie.spl.billingEngine.billing.entity.NormalAccountInfoEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.UUID;
+
+/**
+ * Created by Administrator on 2017/9/5.
+ */
+public interface NormalAccountInfoRepository extends JpaRepository<NormalAccountInfoEntity, UUID> {
+}
